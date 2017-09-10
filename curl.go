@@ -7,18 +7,17 @@
 package curl
 
 import (
-	// "fmt"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	// "encoding/json"
-	// "strconv"
 )
 
 const Version = "0.1.0"
 
 // 请求对象
 type Request struct {
+	Error    error
 	Url      string            // 请求url
 	Method   string            // 请求方式
 	Queries  map[string]string // url请求参数
@@ -29,6 +28,7 @@ type Request struct {
 
 // 响应对象
 type Response struct {
+	Error          error
 	HttpStatusCode int               // http响应状态码
 	Headers        map[string]string // 响应头
 	Body           string            // 响应内容
@@ -57,6 +57,12 @@ func init() {
 // 设置请求url
 func (c *Client) SetUrl(url string) *Client {
 	Req.Url = url
+	return c
+}
+
+// 设置请求类型
+func (c *Client) SetMethod(method string) *Client {
+	Req.Method = method
 	return c
 }
 
@@ -98,6 +104,11 @@ func (c *Client) Post() (*Response, error) {
 
 // 通用发起请求逻辑
 func (c *Client) Send() (*Response, error) {
+	if Req.Method == "" {
+		err := fmt.Errorf("%s", "request method not set")
+		Res.Error = err
+		return Res, err
+	}
 	payload := ""
 
 	// 设置post数据
@@ -112,6 +123,7 @@ func (c *Client) Send() (*Response, error) {
 
 	// 创建http请求对象
 	if req, err := http.NewRequest(Req.Method, Req.Url, strings.NewReader(payload)); err != nil {
+		Req.Error = err
 		return Res, err
 	} else {
 		c.hReq = req
