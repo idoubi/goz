@@ -19,38 +19,51 @@ import (
 
 func main() {
 
-    url := "http://php.dev/api.php?id=55"
+    url := "http://php.dev/api.php"
+
     headers := map[string]string{
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent":   "Sublime",
-        "Version":      "0.1.0",
+        "User-Agent":    "Sublime",
+        "Authorization": "Bearer access_token",
+        "Content-Type":  "application/json",
     }
+
+    cookies := map[string]string{
+        "userId":    "12",
+        "loginTime": "15045682199",
+    }
+
     queries := map[string]string{
         "page": "2",
-        "act":  "view",
-        "user": "mike",
-    }
-    cookies := map[string]string{
-        "uid":       "45",
-        "loginTime": "1455623312",
-    }
-    postData := map[string]string{
-        "title":   "this is a title",
-        "content": "this is content",
+        "act":  "update",
     }
 
-    // 发起post请求
-    curl.Cli.
-        SetUrl(url).           // 请求的url
-        SetMethod("POST").     // 设置发送请求的方式
-        SetQueries(queries).   // 请求查询参数
-        SetPostData(postData). // post数据
-        SetHeaders(headers).   // 设置请求头
-        SetCookies(cookies).   // 设置cookie
-        Send()
+    postData := map[string]interface{}{
+        "name":      "mike",
+        "age":       24,
+        "interests": []string{"basketball", "reading", "coding"},
+        "isAdmin":   true,
+    }
 
-    fmt.Printf("%+v", curl.Res)
-    fmt.Printf("%+v", curl.Req)
+    // 链式操作
+    req := curl.NewRequest()
+    resp, err := req.
+        SetUrl(url).
+        SetHeaders(headers).
+        SetCookies(cookies).
+        SetQueries(queries).
+        SetPostData(postData).
+        Post()
+
+    if err != nil {
+        fmt.Println(err)
+    } else {
+        if resp.IsOk() {
+            fmt.Println(resp.Body)
+        } else {
+            fmt.Println(resp.Raw)
+        }
+    }
+
 }
 
 ```
@@ -60,13 +73,10 @@ func main() {
 ```
 <?php  
 
-echo $_SERVER['REQUEST_METHOD'];
-echo json_encode($_GET);
-echo json_encode($_POST);
-echo json_encode($_REQUEST);
-echo json_encode(getallheaders());
-echo json_encode($_COOKIE);
-echo 'this is api.php';
+//echo json_encode($_GET);                      // 获取url地址中的查询参数
+//echo json_encode(getallheaders());            // 获取请求头
+//echo json_encode($_COOKIE);                   // 获取cookies
+echo file_get_contents("php://input");          // 获取post提交的数据
 
 function getallheaders() { 
     $headers = []; 
@@ -90,6 +100,6 @@ function getallheaders() {
 - [x] 发起GET/POST请求
 - [ ] 发起PUT/PATCH/DELETE/OPTIONS操作
 - [x] 以application/x-www-form-urlencoded形式提交post数据
-- [ ] 以application/json形式提交post数据
+- [x] 以application/json形式提交post数据
 - [ ] 以multipart/form-data形式提交post数据
 - [ ] proxy代理设置
