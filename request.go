@@ -126,7 +126,7 @@ func (this *Request) Send(url string, method string) (*Response, error) {
 	var payload io.Reader
 	if method == "POST" && this.PostData != nil {
 		if jData, err := json.Marshal(this.PostData); err != nil {
-			panic(err)
+			return nil, err
 		} else {
 			payload = bytes.NewReader(jData)
 		}
