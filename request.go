@@ -10,6 +10,7 @@ package curl
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 )
@@ -109,27 +110,23 @@ func (this *Request) Post() (*Response, error) {
 
 // 发起请求
 func (this *Request) Send(url string, method string) (*Response, error) {
-	// 初始化Response对象
-	response := NewResponse()
-
-	// 初始化http.Client对象
-	this.cli = &http.Client{}
-
 	// 检测请求url是否填了
 	if url == "" {
-		panic("Lack of request url")
+		return nil, errors.New("Lack of request url")
 	}
-
 	// 检测请求方式是否填了
 	if method == "" {
-		panic("Lack of request method")
+		return nil, errors.New("Lack of request method")
 	}
-
+	// 初始化Response对象
+	response := NewResponse()
+	// 初始化http.Client对象
+	this.cli = &http.Client{}
 	// 加载用户自定义的post数据到http.Request
 	var payload io.Reader
 	if method == "POST" && this.PostData != nil {
 		if jData, err := json.Marshal(this.PostData); err != nil {
-			panic(err)
+			return nil, err
 		} else {
 			payload = bytes.NewReader(jData)
 		}
@@ -138,7 +135,7 @@ func (this *Request) Send(url string, method string) (*Response, error) {
 	}
 
 	if req, err := http.NewRequest(method, url, payload); err != nil {
-		panic(err)
+		return nil, err
 	} else {
 		this.req = req
 	}
@@ -150,7 +147,7 @@ func (this *Request) Send(url string, method string) (*Response, error) {
 	this.Raw = this.req
 
 	if resp, err := this.cli.Do(this.req); err != nil {
-		panic(err)
+		return nil, err
 	} else {
 		response.Raw = resp
 	}
