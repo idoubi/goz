@@ -13,7 +13,10 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net"
+	"time"
 )
+
 
 // Request构造类
 type Request struct {
@@ -22,6 +25,8 @@ type Request struct {
 	Raw      *http.Request
 	Method   string
 	Url      string
+	dialTimeout time.Duration 
+	responseTimeOut time.Duration 
 	Headers  map[string]string
 	Cookies  map[string]string
 	Queries  map[string]string
@@ -108,6 +113,16 @@ func (this *Request) Post() (*Response, error) {
 	return this.Send(this.Url, http.MethodPost)
 }
 
+//SetDialTimeOut 
+func (this *Request) SetDialTimeOut(TimeOutSecond int){
+	this.dialTimeout = time.Duration(TimeOutSecond)
+}
+
+//SetResponseTimeOut
+func (this *Request) SetResponseTimeOut(TimeOutSecond int){
+	this.responseTimeOut = time.Duration(TimeOutSecond)
+}
+
 // 发起请求
 func (this *Request) Send(url string, method string) (*Response, error) {
 	// 检测请求url是否填了
@@ -121,7 +136,21 @@ func (this *Request) Send(url string, method string) (*Response, error) {
 	// 初始化Response对象
 	response := NewResponse()
 	// 初始化http.Client对象
-	this.cli = &http.Client{}
+	this.cli = &http.Client{
+		////////
+		Transport: &http.Transport{
+			Dial: func(netw, addr string) (net.Conn, error) {
+				conn, err := net.DialTimeout(netw, addr, time.Second*this.dialTimeout)
+				if err != nil {
+					return nil, err
+				}
+				conn.SetDeadline(time.Now().Add(time.Second * this.dialTimeout))
+				return conn, nil
+			},
+			ResponseHeaderTimeout: time.Second * this.responseTimeOut,
+		},
+		////////////
+	}
 	// 加载用户自定义的post数据到http.Request
 	var payload io.Reader
 	if method == "POST" && this.PostData != nil {
