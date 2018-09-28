@@ -12,30 +12,32 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"net/http"
 	"net"
+	"net/http"
 	"time"
 )
 
-
 // Request构造类
 type Request struct {
-	cli      *http.Client
-	req      *http.Request
-	Raw      *http.Request
-	Method   string
-	Url      string
-	dialTimeout time.Duration 
-	responseTimeOut time.Duration 
-	Headers  map[string]string
-	Cookies  map[string]string
-	Queries  map[string]string
-	PostData map[string]interface{}
+	cli             *http.Client
+	req             *http.Request
+	Raw             *http.Request
+	Method          string
+	Url             string
+	dialTimeout     time.Duration
+	responseTimeOut time.Duration
+	Headers         map[string]string
+	Cookies         map[string]string
+	Queries         map[string]string
+	PostData        map[string]interface{}
 }
 
 // 创建一个Request实例
 func NewRequest() *Request {
-	return &Request{}
+	r := &Request{}
+	r.dialTimeout = 5
+	r.responseTimeOut = 5
+	return r
 }
 
 // 设置请求方法
@@ -108,18 +110,38 @@ func (this *Request) Get() (*Response, error) {
 	return this.Send(this.Url, http.MethodGet)
 }
 
+// 发起Delete请求
+func (this *Request) Delete() (*Response, error) {
+	return this.Send(this.Url, http.MethodDelete)
+}
+
+// 发起Delete请求
+func (this *Request) Put() (*Response, error) {
+	return this.Send(this.Url, http.MethodPut)
+}
+
 // 发起post请求
 func (this *Request) Post() (*Response, error) {
 	return this.Send(this.Url, http.MethodPost)
 }
 
-//SetDialTimeOut 
-func (this *Request) SetDialTimeOut(TimeOutSecond int){
+// 发起put请求
+func (this *Request) PUT() (*Response, error) {
+	return this.Send(this.Url, http.MethodPut)
+}
+
+// 发起put请求
+func (this *Request) PATCH() (*Response, error) {
+	return this.Send(this.Url, http.MethodPatch)
+}
+
+//SetDialTimeOut
+func (this *Request) SetDialTimeOut(TimeOutSecond int) {
 	this.dialTimeout = time.Duration(TimeOutSecond)
 }
 
 //SetResponseTimeOut
-func (this *Request) SetResponseTimeOut(TimeOutSecond int){
+func (this *Request) SetResponseTimeOut(TimeOutSecond int) {
 	this.responseTimeOut = time.Duration(TimeOutSecond)
 }
 
