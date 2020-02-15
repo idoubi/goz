@@ -1,38 +1,122 @@
-package curl
+package goz
 
 import (
 	"io/ioutil"
+	"net"
 	"net/http"
+	"strings"
 )
 
+// Response response object
 type Response struct {
-	Raw     *http.Response
-	Headers map[string]string
-	Body    string
+	resp *http.Response
+	req  *http.Request
+	err  error
 }
 
-func NewResponse() *Response {
-	return &Response{}
+// ResponseBody response body
+type ResponseBody []byte
+
+// String fmt outout
+func (r ResponseBody) String() string {
+	return string(r)
 }
 
-func (this *Response) IsOk() bool {
-	return this.Raw.StatusCode == 200
-}
-
-func (this *Response) parseHeaders() error {
-	headers := map[string]string{}
-	for k, v := range this.Raw.Header {
-		headers[k] = v[0]
+// Read get slice of response body
+func (r ResponseBody) Read(length int) []byte {
+	if length > len(r) {
+		length = len(r)
 	}
-	this.Headers = headers
+
+	return r[:length]
+}
+
+// GetContents format response body as string
+func (r ResponseBody) GetContents() string {
+	return string(r)
+}
+
+// GetRequest get request object
+func (r *Response) GetRequest() *http.Request {
+	return r.req
+}
+
+// GetBody parse response body
+func (r *Response) GetBody() (ResponseBody, error) {
+	defer r.resp.Body.Close()
+
+	body, err := ioutil.ReadAll(r.resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return ResponseBody(body), nil
+}
+
+// GetStatusCode get response status code
+func (r *Response) GetStatusCode() int {
+	return r.resp.StatusCode
+}
+
+// GetReasonPhrase get response reason phrase
+func (r *Response) GetReasonPhrase() string {
+	status := r.resp.Status
+	arr := strings.Split(status, " ")
+
+	return arr[1]
+}
+
+// IsTimeout get if request is timeout
+func (r *Response) IsTimeout() bool {
+	if r.err == nil {
+		return false
+	}
+	netErr, ok := r.err.(net.Error)
+	if !ok {
+		return false
+	}
+	if netErr.Timeout() {
+		return true
+	}
+
+	return false
+}
+
+// GetHeaders get response headers
+func (r *Response) GetHeaders() map[string][]string {
+	return r.resp.Header
+}
+
+// GetHeader get response header
+func (r *Response) GetHeader(name string) []string {
+	headers := r.GetHeaders()
+	for k, v := range headers {
+		if strings.ToLower(name) == strings.ToLower(k) {
+			return v
+		}
+	}
+
 	return nil
 }
 
-func (this *Response) parseBody() error {
-	if body, err := ioutil.ReadAll(this.Raw.Body); err != nil {
-		panic(err)
-	} else {
-		this.Body = string(body)
+// GetHeaderLine get a single response header
+func (r *Response) GetHeaderLine(name string) string {
+	header := r.GetHeader(name)
+	if len(header) > 0 {
+		return header[0]
 	}
-	return nil
+
+	return ""
+}
+
+// HasHeader get if header exsits in response headers
+func (r *Response) HasHeader(name string) bool {
+	headers := r.GetHeaders()
+	for k := range headers {
+		if strings.ToLower(name) == strings.ToLower(k) {
+			return true
+		}
+	}
+
+	return false
 }

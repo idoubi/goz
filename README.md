@@ -1,105 +1,235 @@
-# golang版本的curl请求库
+# goz
 
+A fantastic HTTP request library used in golang. Inspired by [guzzle](https://github.com/guzzle/guzzle)
 
-## 安装
-
-```
-go get github.com/mikemintang/go-curl
-```
-  
-## 使用
+## Installation
 
 ```
+go get -u github.com/idoubi/goz
+```
+
+
+## Documentation
+
+API documentation can be found here:
+https://godoc.org/github.com/idoubi/goz
+
+
+## Basic Usage
+
+```go
 package main
 
 import (
-    "fmt"
-    "github.com/mikemintang/go-curl"
+    "github.com/idoubi/goz"
 )
 
 func main() {
+    cli := goz.NewClient()
 
-    url := "http://php.dev/api.php"
+	resp, err := cli.Get("http://127.0.0.1:8091/get")
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-    headers := map[string]string{
-        "User-Agent":    "Sublime",
-        "Authorization": "Bearer access_token",
-        "Content-Type":  "application/json",
-    }
+	fmt.Printf("%T", resp)
+	// Output: *goz.Response
+}
+```
 
-    cookies := map[string]string{
-        "userId":    "12",
-        "loginTime": "15045682199",
-    }
+## Query Params
 
-    queries := map[string]string{
-        "page": "2",
-        "act":  "update",
-    }
+- query map
 
-    postData := map[string]interface{}{
-        "name":      "mike",
-        "age":       24,
-        "interests": []string{"basketball", "reading", "coding"},
-        "isAdmin":   true,
-    }
+```go
+cli := goz.NewClient()
 
-    // 链式操作
-    req := curl.NewRequest()
-    resp, err := req.
-        SetUrl(url).
-        SetHeaders(headers).
-        SetCookies(cookies).
-        SetQueries(queries).
-        SetPostData(postData).
-        Post()
-
-    if err != nil {
-        fmt.Println(err)
-    } else {
-        if resp.IsOk() {
-            fmt.Println(resp.Body)
-        } else {
-            fmt.Println(resp.Raw)
-        }
-    }
-
+resp, err := cli.Get("http://127.0.0.1:8091/get-with-query", goz.Options{
+    Query: map[string]interface{}{
+        "key1": "value1",
+        "key2": []string{"value21", "value22"},
+        "key3": "333",
+    },
+})
+if err != nil {
+    log.Fatalln(err)
 }
 
+fmt.Printf("%s", resp.GetRequest().URL.RawQuery)
+// Output: key1=value1&key2=value21&key2=value22&key3=333
 ```
 
+- query string
 
-## 接收请求的api.php
-```
-<?php  
+```go
+cli := goz.NewClient()
 
-//echo json_encode($_GET);                      // 获取url地址中的查询参数
-//echo json_encode(getallheaders());            // 获取请求头
-//echo json_encode($_COOKIE);                   // 获取cookies
-echo file_get_contents("php://input");          // 获取post提交的数据
+resp, err := cli.Get("http://127.0.0.1:8091/get-with-query?key0=value0", goz.Options{
+    Query: "key1=value1&key2=value21&key2=value22&key3=333",
+})
+if err != nil {
+    log.Fatalln(err)
+}
 
-function getallheaders() { 
-    $headers = []; 
-    foreach ($_SERVER as $name => $value) { 
-       if (substr($name, 0, 5) == 'HTTP_') { 
-           $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value; 
-       } 
-    } 
-    return $headers; 
-} 
+fmt.Printf("%s", resp.GetRequest().URL.RawQuery)
+// Output: key1=value1&key2=value21&key2=value22&key3=333
 ```
 
-## 可导出的成员变量和方法
-![](go-curl.png)
+## Post Data
 
-## TodoList
+- post form 
 
-- [x] 以链式操作的方式发起请求
-- [ ] 以函数回调的方式发起请求
-- [ ] 以类Jquery Ajax的方式发起请求
-- [x] 发起GET/POST请求
-- [ ] 发起PUT/PATCH/DELETE/OPTIONS操作
-- [x] 以application/x-www-form-urlencoded形式提交post数据
-- [x] 以application/json形式提交post数据
-- [ ] 以multipart/form-data形式提交post数据
-- [ ] proxy代理设置
+```go
+cli := goz.NewClient()
+
+resp, err := cli.Post("http://127.0.0.1:8091/post-with-form-params", goz.Options{
+    Headers: map[string]interface{}{
+        "Content-Type": "application/x-www-form-urlencoded",
+    },
+    FormParams: map[string]interface{}{
+        "key1": "value1",
+        "key2": []string{"value21", "value22"},
+        "key3": "333",
+    },
+})
+if err != nil {
+    log.Fatalln(err)
+}
+
+body, _ := resp.GetBody()
+fmt.Println(body)
+// Output: form params:{"key1":["value1"],"key2":["value21","value22"],"key3":["333"]}
+```
+
+- post json 
+
+```go
+cli := goz.NewClient()
+
+resp, err := cli.Post("http://127.0.0.1:8091/post-with-json", goz.Options{
+    Headers: map[string]interface{}{
+        "Content-Type": "application/json",
+    },
+    JSON: struct {
+        Key1 string   `json:"key1"`
+        Key2 []string `json:"key2"`
+        Key3 int      `json:"key3"`
+    }{"value1", []string{"value21", "value22"}, 333},
+})
+if err != nil {
+    log.Fatalln(err)
+}
+
+body, _ := resp.GetBody()
+fmt.Println(body)
+// Output: json:{"key1":"value1","key2":["value21","value22"],"key3":333}
+```
+
+## Request Headers 
+
+```go
+cli := goz.NewClient()
+
+resp, err := cli.Post("http://127.0.0.1:8091/post-with-headers", goz.Options{
+    Headers: map[string]interface{}{
+        "User-Agent": "testing/1.0",
+        "Accept":     "application/json",
+        "X-Foo":      []string{"Bar", "Baz"},
+    },
+})
+if err != nil {
+    log.Fatalln(err)
+}
+
+headers := resp.GetRequest().Header["X-Foo"]
+fmt.Println(headers)
+// Output: [Bar Baz]
+```
+
+## Response 
+
+```go
+cli := goz.NewClient()
+resp, err := cli.Get("http://127.0.0.1:8091/get")
+if err != nil {
+    log.Fatalln(err)
+}
+
+body, err := resp.GetBody()
+if err != nil {
+    log.Fatalln(err)
+}
+fmt.Printf("%T", body)
+// Output: goz.ResponseBody
+
+part := body.Read(30)
+fmt.Printf("%T", part)
+// Output: []uint8
+
+contents := body.GetContents()
+fmt.Printf("%T", contents)
+// Output: string
+
+fmt.Println(resp.GetStatusCode())
+// Output: 200
+
+fmt.Println(resp.GetReasonPhrase())
+// Output: OK
+
+headers := resp.GetHeaders()
+fmt.Printf("%T", headers)
+// Output: map[string][]string
+
+flag := resp.HasHeader("Content-Type")
+fmt.Printf("%T", flag)
+// Output: bool
+
+header := resp.GetHeader("content-type")
+fmt.Printf("%T", header)
+// Output: []string
+    
+headerLine := resp.GetHeaderLine("content-type")
+fmt.Printf("%T", headerLine)
+// Output: string
+```
+
+## Proxy
+
+```go
+cli := goz.NewClient()
+
+resp, err := cli.Get("https://www.fbisb.com/ip.php", goz.Options{
+    Timeout: 5.0,
+    Proxy:   "http://127.0.0.1:1087",
+})
+if err != nil {
+    log.Fatalln(err)
+}
+
+fmt.Println(resp.GetStatusCode())
+// Output: 200
+```
+
+## Timeout 
+
+```go
+cli := goz.NewClient(goz.Options{
+    Timeout: 0.9,
+})
+resp, err := cli.Get("http://127.0.0.1:8091/get-timeout")
+if err != nil {
+    if resp.IsTimeout() {
+        fmt.Println("timeout")
+        // Output: timeout
+        return
+    }
+}
+
+fmt.Println("not timeout")
+```
+
+# License
+
+[MIT](https://opensource.org/licenses/MIT)
+
+Copyright (c) 2017-present, [idoubi](http://idoubi.cc)
