@@ -9,6 +9,7 @@ type Options struct {
 	timeout    time.Duration
 	Query      interface{}
 	Headers    map[string]interface{}
+	Cookies    interface{}
 	FormParams map[string]interface{}
 	JSON       interface{}
 	Proxy      string

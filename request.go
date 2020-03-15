@@ -90,6 +90,9 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	// parse headers
 	r.parseHeaders()
 
+	// parse cookies
+	r.parseCookies()
+
 	_resp, err := r.cli.Do(r.req)
 
 	resp := &Response{
@@ -150,6 +153,27 @@ func (r *Request) parseQuery() {
 			}
 		}
 		r.req.URL.RawQuery = q.Encode()
+	}
+}
+
+func (r *Request) parseCookies() {
+	switch r.opts.Cookies.(type) {
+	case string:
+		cookies := r.opts.Cookies.(string)
+		r.req.Header.Add("Cookie", cookies)
+	case map[string]string:
+		cookies := r.opts.Cookies.(map[string]string)
+		for k, v := range cookies {
+			r.req.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: v,
+			})
+		}
+	case []*http.Cookie:
+		cookies := r.opts.Cookies.([]*http.Cookie)
+		for _, cookie := range cookies {
+			r.req.AddCookie(cookie)
+		}
 	}
 }
 

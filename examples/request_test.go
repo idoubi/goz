@@ -3,6 +3,7 @@ package goz
 import (
 	"fmt"
 	"log"
+	"net/http"
 
 	"github.com/idoubi/goz"
 )
@@ -95,6 +96,69 @@ func ExampleRequest_Post_withHeaders() {
 	headers := resp.GetRequest().Header["X-Foo"]
 	fmt.Println(headers)
 	// Output: [Bar Baz]
+}
+
+func ExampleRequest_Post_withCookies_str() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-cookies", goz.Options{
+		Cookies: "cookie1=value1;cookie2=value2",
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+	fmt.Printf("%T", body)
+	// Output: goz.ResponseBody
+}
+
+func ExampleRequest_Post_withCookies_map() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-cookies", goz.Options{
+		Cookies: map[string]string{
+			"cookie1": "value1",
+			"cookie2": "value2",
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+	fmt.Printf("%T", body)
+	// Output: goz.ResponseBody
+}
+
+func ExampleRequest_Post_withCookies_obj() {
+	cli := goz.NewClient()
+
+	cookies := make([]*http.Cookie, 0, 2)
+	cookies = append(cookies, &http.Cookie{
+		Name:     "cookie133",
+		Value:    "value1",
+		Domain:   "httpbin.org",
+		Path:     "/cookies",
+		HttpOnly: true,
+	})
+	cookies = append(cookies, &http.Cookie{
+		Name:   "cookie2",
+		Value:  "value2",
+		Domain: "httpbin.org",
+		Path:   "/cookies",
+	})
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-cookies", goz.Options{
+		Cookies: cookies,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+	fmt.Printf("%T", body)
+	// Output: goz.ResponseBody
 }
 
 func ExampleRequest_Post_withFormParams() {

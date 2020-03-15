@@ -15,6 +15,7 @@ func main() {
 	http.HandleFunc("/get-with-query", getWithQuery)
 	http.HandleFunc("/post", post)
 	http.HandleFunc("/post-with-headers", postWithHeaders)
+	http.HandleFunc("/post-with-cookies", postWithCookies)
 	http.HandleFunc("/post-with-form-params", postWithFormParams)
 	http.HandleFunc("/post-with-json", postWithJSON)
 	http.HandleFunc("/put", put)
@@ -60,6 +61,16 @@ func postWithHeaders(w http.ResponseWriter, r *http.Request) {
 	headers, _ := json.Marshal(&r.Header)
 
 	fmt.Fprintf(w, "headers:%s", headers)
+}
+
+func postWithCookies(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		fmt.Fprintf(w, "need post")
+		return
+	}
+
+	cookies, _ := json.Marshal(r.Cookies())
+	fmt.Fprintf(w, "cookies:%s", cookies)
 }
 
 func postWithFormParams(w http.ResponseWriter, r *http.Request) {
