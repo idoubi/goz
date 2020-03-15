@@ -17,6 +17,10 @@ func main() {
 	http.HandleFunc("/post-with-headers", postWithHeaders)
 	http.HandleFunc("/post-with-form-params", postWithFormParams)
 	http.HandleFunc("/post-with-json", postWithJSON)
+	http.HandleFunc("/put", put)
+	http.HandleFunc("/patch", patch)
+	http.HandleFunc("/delete", delete)
+	http.HandleFunc("/options", options)
 
 	err := http.ListenAndServe(":8091", nil)
 	if err != nil {
@@ -80,4 +84,40 @@ func postWithJSON(w http.ResponseWriter, r *http.Request) {
 	json, _ := ioutil.ReadAll(r.Body)
 
 	fmt.Fprintf(w, "json:%s", json)
+}
+
+func put(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "PUT" {
+		fmt.Fprintf(w, "need put")
+		return
+	}
+
+	fmt.Fprintf(w, "http put")
+}
+
+func patch(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "PATCH" {
+		fmt.Fprintf(w, "need patch")
+		return
+	}
+
+	fmt.Fprintf(w, "http patch")
+}
+
+func delete(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "DELETE" {
+		fmt.Fprintf(w, "need delete")
+		return
+	}
+
+	fmt.Fprintf(w, "http delete")
+}
+
+func options(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "OPTIONS" {
+		fmt.Fprintf(w, "need options")
+		return
+	}
+
+	fmt.Fprintf(w, "http options")
 }

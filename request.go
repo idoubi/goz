@@ -30,14 +30,52 @@ func (r *Request) Post(uri string, opts ...Options) (*Response, error) {
 	return r.Request("POST", uri, opts...)
 }
 
+// Put send put request
+func (r *Request) Put(uri string, opts ...Options) (*Response, error) {
+	return r.Request("PUT", uri, opts...)
+}
+
+// Patch send patch request
+func (r *Request) Patch(uri string, opts ...Options) (*Response, error) {
+	return r.Request("PATCH", uri, opts...)
+}
+
+// Delete send delete request
+func (r *Request) Delete(uri string, opts ...Options) (*Response, error) {
+	return r.Request("DELETE", uri, opts...)
+}
+
+// Options send options request
+func (r *Request) Options(uri string, opts ...Options) (*Response, error) {
+	return r.Request("OPTIONS", uri, opts...)
+}
+
 // Request send request
 func (r *Request) Request(method, uri string, opts ...Options) (*Response, error) {
-	if method != "GET" && method != "POST" {
-		return nil, errors.New("invalid request method")
-	}
-
 	if len(opts) > 0 {
 		r.opts = opts[0]
+	}
+
+	switch method {
+	case http.MethodGet, http.MethodDelete:
+		req, err := http.NewRequest(method, uri, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		r.req = req
+	case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodOptions:
+		// parse body
+		r.parseBody()
+
+		req, err := http.NewRequest(method, uri, r.body)
+		if err != nil {
+			return nil, err
+		}
+
+		r.req = req
+	default:
+		return nil, errors.New("invalid request method")
 	}
 
 	// parseOptions
@@ -45,26 +83,6 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 
 	// parseClient
 	r.parseClient()
-
-	switch method {
-	case "GET":
-		req, err := http.NewRequest("GET", uri, nil)
-		if err != nil {
-			return nil, err
-		}
-
-		r.req = req
-	case "POST":
-		// parse body
-		r.parseBody()
-
-		req, err := http.NewRequest("POST", uri, r.body)
-		if err != nil {
-			return nil, err
-		}
-
-		r.req = req
-	}
 
 	// parse query
 	r.parseQuery()

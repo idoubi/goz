@@ -140,3 +140,51 @@ func ExampleRequest_Post_withJSON() {
 	fmt.Println(body)
 	// Output: json:{"key1":"value1","key2":["value21","value22"],"key3":333}
 }
+
+func ExampleRequest_Put() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Put("http://127.0.0.1:8091/put")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Printf("%T", resp)
+	// Output: *goz.Response
+}
+
+func ExampleRequest_Patch() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Patch("http://127.0.0.1:8091/patch")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Printf("%T", resp)
+	// Output: *goz.Response
+}
+
+func ExampleRequest_Delete() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Delete("http://127.0.0.1:8091/delete")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Printf("%T", resp)
+	// Output: *goz.Response
+}
+
+func ExampleRequest_Options() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Options("http://127.0.0.1:8091/options")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Printf("%T", resp)
+	// Output: *goz.Response
+}
