@@ -1,13 +1,18 @@
 package goz
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path"
 	"strings"
 	"time"
 )
@@ -23,6 +28,66 @@ type Request struct {
 // Get send get request
 func (r *Request) Get(uri string, opts ...Options) (*Response, error) {
 	return r.Request("GET", uri, opts...)
+}
+
+// Get method  download files
+func (r *Request) Down(resource_url string, sava_path string, opts ...Options) bool {
+	uri, err := url.ParseRequestURI(resource_url)
+	if err != nil {
+		log.Panic("网址无法访问")
+	}
+
+	if resp, err := r.Request("GET", resource_url, opts...); err == nil {
+		filename := path.Base(uri.Path)
+		response := resp.GetResponse()
+		return r.saveFile(response, sava_path+filename)
+
+	} else {
+		fmt.Println(err.Error())
+	}
+	return false
+}
+
+func (r *Request) saveFile(resp *http.Response, file_name string) bool {
+	var is_occur_error bool
+	if resp.ContentLength <= 0 {
+		log.Println("[*] Destination server does not support breakpoint download.")
+		is_occur_error = true
+	}
+	raw := resp.Body
+	defer raw.Close()
+	reader := bufio.NewReaderSize(raw, 1024*50) //相当于一个临时缓冲区(设置为可以单次存储50M的文件)，每次读取以后就把原始数据重新加载一份，等待下一次读取
+	file, err := os.OpenFile(file_name, os.O_WRONLY|os.O_CREATE, 0777)
+	if err != nil {
+		log.Panic("创建镜像文件失败，无法进行后续的写入操作" + err.Error())
+		is_occur_error = true
+	}
+	writer := bufio.NewWriter(file)
+	buff := make([]byte, 50*1024)
+
+	for {
+		curr_read_size, reader_err := reader.Read(buff)
+		if curr_read_size > 0 {
+			write_size, write_err := writer.Write(buff[0:curr_read_size])
+			if write_err != nil {
+				log.Panic("写入发生错误"+write_err.Error(), "写入长度：", write_size)
+				is_occur_error = true
+				break
+			}
+		}
+		// 读取结束
+		if reader_err == io.EOF {
+			writer.Flush()
+			break
+		}
+	}
+	// 如果没有发生错误，就返回 true
+	if is_occur_error == false {
+		return true
+	} else {
+		return false
+	}
+
 }
 
 // Post send post request

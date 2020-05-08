@@ -1,6 +1,7 @@
 package goz
 
 import (
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -14,43 +15,33 @@ type Response struct {
 	err  error
 }
 
-// ResponseBody response body
-type ResponseBody []byte
-
-// String fmt outout
-func (r ResponseBody) String() string {
-	return string(r)
-}
-
-// Read get slice of response body
-func (r ResponseBody) Read(length int) []byte {
-	if length > len(r) {
-		length = len(r)
-	}
-
-	return r[:length]
-}
-
-// GetContents format response body as string
-func (r ResponseBody) GetContents() string {
-	return string(r)
-}
-
 // GetRequest get request object
 func (r *Response) GetRequest() *http.Request {
 	return r.req
 }
 
+// GetRequest get request object
+func (r *Response) GetResponse() *http.Response {
+	return r.resp
+}
+
 // GetBody parse response body
-func (r *Response) GetBody() (ResponseBody, error) {
+func (r *Response) GetContents() (string, error) {
 	defer r.resp.Body.Close()
 
 	body, err := ioutil.ReadAll(r.resp.Body)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return ResponseBody(body), nil
+	return string(body), nil
+}
+
+// GetBody parse response body
+func (r *Response) GetBody() (io.Reader, error) {
+	defer r.resp.Body.Close()
+
+	return r.resp.Body, r.err
 }
 
 // GetStatusCode get response status code
@@ -87,6 +78,18 @@ func (r *Response) GetHeaders() map[string][]string {
 	return r.resp.Header
 }
 
+// HasHeader get if header exsits in response headers
+func (r *Response) HasHeader(name string) bool {
+	headers := r.GetHeaders()
+	for k := range headers {
+		if strings.ToLower(name) == strings.ToLower(k) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetHeader get response header
 func (r *Response) GetHeader(name string) []string {
 	headers := r.GetHeaders()
@@ -107,16 +110,4 @@ func (r *Response) GetHeaderLine(name string) string {
 	}
 
 	return ""
-}
-
-// HasHeader get if header exsits in response headers
-func (r *Response) HasHeader(name string) bool {
-	headers := r.GetHeaders()
-	for k := range headers {
-		if strings.ToLower(name) == strings.ToLower(k) {
-			return true
-		}
-	}
-
-	return false
 }

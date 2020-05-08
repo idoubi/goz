@@ -23,24 +23,6 @@ func ExampleResponse_GetBody() {
 	// Output: goz.ResponseBody
 }
 
-func ExampleResponseBody_Read() {
-	cli := goz.NewClient()
-	resp, err := cli.Get("http://127.0.0.1:8091/get")
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	body, err := resp.GetBody()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	contents := body.Read(30)
-
-	fmt.Printf("%T", contents)
-	// Output: []uint8
-}
-
 func ExampleResponseBody_GetContents() {
 	cli := goz.NewClient()
 	resp, err := cli.Get("http://127.0.0.1:8091/get")
@@ -48,12 +30,10 @@ func ExampleResponseBody_GetContents() {
 		log.Fatalln(err)
 	}
 
-	body, err := resp.GetBody()
+	contents, err := resp.GetContents()
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	contents := body.GetContents()
 
 	fmt.Printf("%T", contents)
 	// Output: string

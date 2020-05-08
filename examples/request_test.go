@@ -20,6 +20,16 @@ func ExampleRequest_Get() {
 	// Output: *goz.Response
 }
 
+func ExampleRequest_Down() {
+	cli := goz.NewClient()
+
+	res := cli.Down("http://139.196.101.31:2080/GinSkeleton.jpg", "F:/2020_project/go/goz/examples/", goz.Options{
+		Timeout: 5.0,
+	})
+	fmt.Printf("%t", res)
+	// Output: true
+}
+
 func ExampleRequest_Get_withQuery_arr() {
 	cli := goz.NewClient()
 
