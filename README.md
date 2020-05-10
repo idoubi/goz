@@ -3,10 +3,11 @@
 - 基于goz改造，感谢goz（https://github.com/idoubi/goz.git）原作者提供了大量的基础代码
 - 相比原版变化：
 >   1.增加了文件下载功能  
->   2.GetBody() 返回io.ReaderCloser ,而不是原版本中的文本格式数据。  
->   3.原版本的GetBody()被现有版本GetContents()代替。  
->   4.删除、简化了原版本中为处理数据类型转换而定义的ResponseBody,本版本中使用系统系统默认的数据类型转换即可，简单快捷。  
->   5.增强原版本中表单参数只能传递string、[]string的问题，该版本支持数字、文本、[]string等。
+>   2.GetBody() 返回io.ReaderCloser ,而不是原版本中的文本格式数据。
+>   3.GetBody() 将专门负责处理流式数据，因此代码逻辑处理完毕，必须使用io.ReaderCloser 接口提供的函数关闭。  
+>   4.原版本的GetBody()被现有版本GetContents()代替，由于文本数据,一次性返回，因此不需要手动关闭，程序会自动释放相关io资源。  
+>   5.删除、简化了原版本中为处理数据类型转换而定义的ResponseBody,本版本中使用系统系统默认的数据类型转换即可，简单快捷。  
+>   6.增强原版本中表单参数只能传递string、[]string的问题，该版本支持数字、文本、[]string等。
 
 ## Installation
 
