@@ -1,6 +1,6 @@
 # goz
 
-- 基于goz改造，感谢goz（https://github.com/idoubi/goz.git）原作者提供了大量的基础代码
+- 基于goz改造，感谢goz（idoubi/goz.git）原作者提供了大量的基础代码
 - 相比原版变化：
 >   1.增加了文件下载功能  
 >   2.GetBody() 返回io.ReaderCloser ,而不是原版本中的文本格式数据。
