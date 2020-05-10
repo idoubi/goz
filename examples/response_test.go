@@ -2,7 +2,7 @@ package goz
 
 import (
 	"fmt"
-	"github.com/idoubi/goz"
+	"github.com/qifengzhang007/goz.git"
 	"log"
 )
 
