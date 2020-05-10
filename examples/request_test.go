@@ -2,11 +2,10 @@ package goz
 
 import (
 	"fmt"
+	"github.com/qifengzhang007/goz"
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/qifengzhang007/goz.git"
 )
 
 func ExampleRequest_Get() {

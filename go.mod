@@ -1,3 +1,3 @@
-module github.com/qifengzhang007/goz.git
+module 	github.com/qifengzhang007/goz
 
-go 1.13
+go 1.14
