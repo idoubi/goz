@@ -46,7 +46,7 @@ func (r *Request) Down(resource_url string, sava_path string, opts ...Options) b
 			log.Panic("被下载的文件内容为空")
 		}
 	} else {
-		fmt.Println(err.Error())
+		log.Panic(err.Error())
 	}
 	return false
 }
