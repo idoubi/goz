@@ -39,25 +39,23 @@ func (r *Request) Down(resource_url string, sava_path string, opts ...Options) b
 
 	if resp, err := r.Request("GET", resource_url, opts...); err == nil {
 		filename := path.Base(uri.Path)
-		response := resp.GetResponse()
-		return r.saveFile(response, sava_path+filename)
-
+		if resp.GetContentLength() > 0 {
+			body := resp.GetBody()
+			return r.saveFile(body, sava_path+filename)
+		} else {
+			log.Panic("被下载的文件内容为空")
+		}
 	} else {
 		fmt.Println(err.Error())
 	}
 	return false
 }
 
-func (r *Request) saveFile(resp *http.Response, file_name string) bool {
+func (r *Request) saveFile(body io.ReadCloser, file_name string) bool {
 	var is_occur_error bool
-	if resp.ContentLength <= 0 {
-		log.Println("[*] Destination server does not support breakpoint download.")
-		is_occur_error = true
-	}
-	raw := resp.Body
-	defer raw.Close()
-	reader := bufio.NewReaderSize(raw, 1024*50) //相当于一个临时缓冲区(设置为可以单次存储50M的文件)，每次读取以后就把原始数据重新加载一份，等待下一次读取
-	file, err := os.OpenFile(file_name, os.O_WRONLY|os.O_CREATE, 0777)
+	defer body.Close()
+	reader := bufio.NewReaderSize(body, 1024*50) //相当于一个临时缓冲区(设置为可以单次存储5M的文件)，每次读取以后就把原始数据重新加载一份，等待下一次读取
+	file, err := os.OpenFile(file_name, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Panic("创建镜像文件失败，无法进行后续的写入操作" + err.Error())
 		is_occur_error = true
@@ -159,7 +157,6 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	r.parseCookies()
 
 	_resp, err := r.cli.Do(r.req)
-
 	resp := &Response{
 		resp: _resp,
 		req:  r.req,
@@ -207,15 +204,19 @@ func (r *Request) parseQuery() {
 	case map[string]interface{}:
 		q := r.req.URL.Query()
 		for k, v := range r.opts.Query.(map[string]interface{}) {
-			if vv, ok := v.(string); ok {
-				q.Set(k, vv)
-				continue
-			}
 			if vv, ok := v.([]string); ok {
 				for _, vvv := range vv {
 					q.Add(k, vvv)
 				}
+				continue
 			}
+			vv := fmt.Sprintf("%v", v)
+			q.Set(k, vv)
+			//if vv, ok := v.(string); ok {
+			//	q.Set(k, vv)
+			//	continue
+			//}
+
 		}
 		r.req.URL.RawQuery = q.Encode()
 	}
@@ -245,15 +246,14 @@ func (r *Request) parseCookies() {
 func (r *Request) parseHeaders() {
 	if r.opts.Headers != nil {
 		for k, v := range r.opts.Headers {
-			if vv, ok := v.(string); ok {
-				r.req.Header.Set(k, vv)
-				continue
-			}
 			if vv, ok := v.([]string); ok {
 				for _, vvv := range vv {
 					r.req.Header.Add(k, vvv)
 				}
+				continue
 			}
+			vv := fmt.Sprintf("%v", v)
+			r.req.Header.Set(k, vv)
 		}
 	}
 }
@@ -263,14 +263,18 @@ func (r *Request) parseBody() {
 	if r.opts.FormParams != nil {
 		values := url.Values{}
 		for k, v := range r.opts.FormParams {
-			if vv, ok := v.(string); ok {
-				values.Set(k, vv)
-			}
 			if vv, ok := v.([]string); ok {
 				for _, vvv := range vv {
 					values.Add(k, vvv)
 				}
+				continue
 			}
+			vv := fmt.Sprintf("%v", v)
+			values.Set(k, vv)
+			//if vv, ok := v.(string); ok {
+			//	values.Set(k, vv)
+			//}
+
 		}
 		r.body = strings.NewReader(values.Encode())
 

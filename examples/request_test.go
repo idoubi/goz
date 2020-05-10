@@ -2,6 +2,7 @@ package goz
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -35,9 +36,9 @@ func ExampleRequest_Get_withQuery_arr() {
 
 	resp, err := cli.Get("http://127.0.0.1:8091/get-with-query", goz.Options{
 		Query: map[string]interface{}{
-			"key1": "value1",
+			"key1": 123,
 			"key2": []string{"value21", "value22"},
-			"key3": "333",
+			"key3": "abc456",
 		},
 	})
 	if err != nil {
@@ -45,7 +46,7 @@ func ExampleRequest_Get_withQuery_arr() {
 	}
 
 	fmt.Printf("%s", resp.GetRequest().URL.RawQuery)
-	// Output: key1=value1&key2=value21&key2=value22&key3=333
+	// Output: key1=123&key2=value21&key2=value22&key3=abc456
 }
 
 func ExampleRequest_Get_withQuery_str() {
@@ -75,6 +76,8 @@ func ExampleRequest_Get_withProxy() {
 
 	fmt.Println(resp.GetStatusCode())
 	// Output: 200
+	fmt.Println(resp.GetContents())
+	// Output: 116.153.43.128
 }
 
 func ExampleRequest_Post() {
@@ -117,16 +120,15 @@ func ExampleRequest_Post_withCookies_str() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	body, _ := resp.GetBody()
-	fmt.Printf("%T", body)
-	// Output: goz.ResponseBody
+	fmt.Printf("%d", resp.GetContentLength())
+	//Output: 385
 }
 
 func ExampleRequest_Post_withCookies_map() {
 	cli := goz.NewClient()
 
-	resp, err := cli.Post("http://127.0.0.1:8091/post-with-cookies", goz.Options{
+	//resp, err := cli.Post("http://127.0.0.1:8091/post-with-cookies", goz.Options{
+	resp, err := cli.Post("http://101.132.69.236/api/v2/test_network", goz.Options{
 		Cookies: map[string]string{
 			"cookie1": "value1",
 			"cookie2": "value2",
@@ -136,9 +138,11 @@ func ExampleRequest_Post_withCookies_map() {
 		log.Fatalln(err)
 	}
 
-	body, _ := resp.GetBody()
-	fmt.Printf("%T", body)
-	// Output: goz.ResponseBody
+	body := resp.GetBody()
+	defer body.Close()
+	bytes, _ := ioutil.ReadAll(body)
+	fmt.Printf("%s", bytes)
+	// Output: {"code":200,"msg":"OK","data":""}
 }
 
 func ExampleRequest_Post_withCookies_obj() {
@@ -166,15 +170,14 @@ func ExampleRequest_Post_withCookies_obj() {
 		log.Fatalln(err)
 	}
 
-	body, _ := resp.GetBody()
+	body := resp.GetBody()
 	fmt.Printf("%T", body)
-	// Output: goz.ResponseBody
+	//Output: *http.cancelTimerBody
 }
-
-func ExampleRequest_Post_withFormParams() {
+func ExampleRequest_SimplePost() {
 	cli := goz.NewClient()
 
-	resp, err := cli.Post("http://127.0.0.1:8091/post-with-form-params", goz.Options{
+	resp, err := cli.Post("http://101.132.69.236/api/v2/test_network", goz.Options{
 		Headers: map[string]interface{}{
 			"Content-Type": "application/x-www-form-urlencoded",
 		},
@@ -188,9 +191,32 @@ func ExampleRequest_Post_withFormParams() {
 		log.Fatalln(err)
 	}
 
-	body, _ := resp.GetBody()
-	fmt.Println(body)
-	// Output: form params:{"key1":["value1"],"key2":["value21","value22"],"key3":["333"]}
+	contents, _ := resp.GetContents()
+	fmt.Printf("%s", contents)
+	// Output:  {"code":200,"msg":"OK","data":""}
+}
+
+func ExampleRequest_Post_withFormParams() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-form-params", goz.Options{
+		Headers: map[string]interface{}{
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		FormParams: map[string]interface{}{
+			"key1": 2020,
+			"key2": []string{"value21", "value22"},
+			"key3": "abcd张",
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, err := resp.GetContents()
+
+	fmt.Printf("%v", body)
+	// Output:  form params:{"key1":["2020"],"key2":["value21","value22"],"key3":["abcd张"]}
 }
 
 func ExampleRequest_Post_withJSON() {
@@ -210,9 +236,10 @@ func ExampleRequest_Post_withJSON() {
 		log.Fatalln(err)
 	}
 
-	body, _ := resp.GetBody()
-	fmt.Println(body)
-	// Output: json:{"key1":"value1","key2":["value21","value22"],"key3":333}
+	body := resp.GetBody()
+	defer body.Close()
+	fmt.Printf("%T", body)
+	// Output:  *http.cancelTimerBody
 }
 
 func ExampleRequest_Put() {

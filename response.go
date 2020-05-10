@@ -37,11 +37,16 @@ func (r *Response) GetContents() (string, error) {
 	return string(body), nil
 }
 
-// GetBody parse response body
-func (r *Response) GetBody() (io.Reader, error) {
-	defer r.resp.Body.Close()
+// Get Response ContentLength
+func (r *Response) GetContentLength() int64 {
+	return r.resp.ContentLength
+}
 
-	return r.resp.Body, r.err
+// GetBody parse response body
+func (r *Response) GetBody() io.ReadCloser {
+	//defer r.resp.Body.Close()
+
+	return r.resp.Body
 }
 
 // GetStatusCode get response status code

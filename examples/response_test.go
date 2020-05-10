@@ -2,9 +2,8 @@ package goz
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/idoubi/goz"
+	"log"
 )
 
 func ExampleResponse_GetBody() {
@@ -14,13 +13,13 @@ func ExampleResponse_GetBody() {
 		log.Fatalln(err)
 	}
 
-	body, err := resp.GetBody()
+	body := resp.GetBody()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("%T", body)
-	// Output: goz.ResponseBody
+	fmt.Printf("%T", body) //   *http.cancelTimerBody 就是对 body 数据类型 io.ReadCloser 的二次封装
+	// Output:  *http.cancelTimerBody
 }
 
 func ExampleResponseBody_GetContents() {
@@ -35,8 +34,8 @@ func ExampleResponseBody_GetContents() {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("%T", contents)
-	// Output: string
+	fmt.Printf("%s", contents)
+	// Output: http get
 }
 
 func ExampleResponse_GetStatusCode() {
@@ -121,6 +120,7 @@ func ExampleResponse_IsTimeout() {
 			return
 		}
 	}
-
 	fmt.Println("not timeout")
+	// Output: not timeout
+
 }

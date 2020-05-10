@@ -1,18 +1,24 @@
 # goz
 
-A fantastic HTTP request library used in golang. Inspired by [guzzle](https://github.com/guzzle/guzzle)
+- 基于goz改造，感谢goz（https://github.com/idoubi/goz.git）原作者提供了大量的基础代码
+- 相比原版变化：
+>   1.增加了文件下载功能  
+>   2.GetBody() 返回io.ReaderCloser ,而不是原版本中的文本格式数据。  
+>   3.原版本的GetBody()被现有版本GetContents()代替。  
+>   4.删除、简化了原版本中为处理数据类型转换而定义的ResponseBody,本版本中使用系统系统默认的数据类型转换即可，简单快捷。
+>   5.增强原版本中表单参数只能传递string、[]string的问题，该版本支持数字、文本、[]string等。
 
 ## Installation
 
 ```
-go get -u github.com/idoubi/goz
+go get -u github.com/qifengzhang007/goz.git
 ```
 
 
 ## Documentation
 
 API documentation can be found here:
-https://godoc.org/github.com/idoubi/goz
+https://github.com/qifengzhang007/goz.git
 
 
 ## Basic Usage
@@ -42,21 +48,23 @@ func main() {
 - query map
 
 ```go
-cli := goz.NewClient()
+func ExampleRequest_Get_withQuery_arr() {
+	cli := goz.NewClient()
 
-resp, err := cli.Get("http://127.0.0.1:8091/get-with-query", goz.Options{
-    Query: map[string]interface{}{
-        "key1": "value1",
-        "key2": []string{"value21", "value22"},
-        "key3": "333",
-    },
-})
-if err != nil {
-    log.Fatalln(err)
+	resp, err := cli.Get("http://127.0.0.1:8091/get-with-query", goz.Options{
+		Query: map[string]interface{}{
+			"key1": 123,
+			"key2": []string{"value21", "value22"},
+			"key3": "abc456",
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Printf("%s", resp.GetRequest().URL.RawQuery)
+	// Output: key1=123&key2=value21&key2=value22&key3=abc456
 }
-
-fmt.Printf("%s", resp.GetRequest().URL.RawQuery)
-// Output: key1=value1&key2=value21&key2=value22&key3=333
 ```
 
 - query string
@@ -80,49 +88,55 @@ fmt.Printf("%s", resp.GetRequest().URL.RawQuery)
 - post form 
 
 ```go
-cli := goz.NewClient()
+func ExampleRequest_Post_withFormParams() {
+	cli := goz.NewClient()
 
-resp, err := cli.Post("http://127.0.0.1:8091/post-with-form-params", goz.Options{
-    Headers: map[string]interface{}{
-        "Content-Type": "application/x-www-form-urlencoded",
-    },
-    FormParams: map[string]interface{}{
-        "key1": "value1",
-        "key2": []string{"value21", "value22"},
-        "key3": "333",
-    },
-})
-if err != nil {
-    log.Fatalln(err)
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-form-params", goz.Options{
+		Headers: map[string]interface{}{
+			"Content-Type": "application/x-www-form-urlencoded",
+		},
+		FormParams: map[string]interface{}{
+			"key1": 2020,
+			"key2": []string{"value21", "value22"},
+			"key3": "abcd张",
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body,err := resp.GetContents()
+
+	fmt.Printf("%v", body)
+	// Output:  form params:{"key1":["2020"],"key2":["value21","value22"],"key3":["abcd张"]}
 }
-
-body, _ := resp.GetBody()
-fmt.Println(body)
-// Output: form params:{"key1":["value1"],"key2":["value21","value22"],"key3":["333"]}
 ```
 
 - post json 
 
 ```go
-cli := goz.NewClient()
+func ExampleRequest_Post_withJSON() {
+	cli := goz.NewClient()
 
-resp, err := cli.Post("http://127.0.0.1:8091/post-with-json", goz.Options{
-    Headers: map[string]interface{}{
-        "Content-Type": "application/json",
-    },
-    JSON: struct {
-        Key1 string   `json:"key1"`
-        Key2 []string `json:"key2"`
-        Key3 int      `json:"key3"`
-    }{"value1", []string{"value21", "value22"}, 333},
-})
-if err != nil {
-    log.Fatalln(err)
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-json", goz.Options{
+		Headers: map[string]interface{}{
+			"Content-Type": "application/json",
+		},
+		JSON: struct {
+			Key1 string   `json:"key1"`
+			Key2 []string `json:"key2"`
+			Key3 int      `json:"key3"`
+		}{"value1", []string{"value21", "value22"}, 333},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body := resp.GetBody()
+	defer body.Close()
+	fmt.Printf("%T", body)
+	// Output:  *http.cancelTimerBody
 }
-
-body, _ := resp.GetBody()
-fmt.Println(body)
-// Output: json:{"key1":"value1","key2":["value21","value22"],"key3":333}
 ```
 
 ## Request Headers 
@@ -226,6 +240,20 @@ if err != nil {
 }
 
 fmt.Println("not timeout")
+```
+
+## Download File 
+
+```go
+func ExampleRequest_Down() {
+	cli := goz.NewClient()
+
+	res := cli.Down("http://139.196.101.31:2080/GinSkeleton.jpg", "F:/2020_project/go/goz/examples/", goz.Options{
+		Timeout: 5.0,
+	})
+	fmt.Printf("%t", res)
+	// Output: true
+}
 ```
 
 # License
