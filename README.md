@@ -27,7 +27,7 @@ https://github.com/qifengzhang007/goz.git
 package main
 
 import (
-    "github.com/idoubi/goz"
+    "github.com/qifengzhang007/goz.git"
 )
 
 func main() {
