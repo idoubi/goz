@@ -116,9 +116,8 @@ func (r *Request) Options(uri string, opts ...Options) (*Response, error) {
 // Request send request
 func (r *Request) Request(method, uri string, opts ...Options) (*Response, error) {
 	if len(opts) > 0 {
-		r.opts = mergeHeaders(defaultHeader(), opts[0])
+		r.opts = mergeHeaders(defaultHeader(), opts...)
 	}
-
 	switch method {
 	case http.MethodGet, http.MethodDelete:
 		req, err := http.NewRequest(method, uri, nil)
@@ -140,7 +139,8 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	default:
 		return nil, errors.New("invalid request method")
 	}
-
+	//r.opts.Headers["Host"]=make()
+	r.opts.Headers["Host"] = fmt.Sprintf("%v", r.req.Host)
 	// parseOptions
 	r.parseOptions()
 
@@ -166,7 +166,6 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	if err != nil {
 		return resp, err
 	}
-
 	return resp, nil
 }
 
