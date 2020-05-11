@@ -116,7 +116,7 @@ func (r *Request) Options(uri string, opts ...Options) (*Response, error) {
 // Request send request
 func (r *Request) Request(method, uri string, opts ...Options) (*Response, error) {
 	if len(opts) > 0 {
-		r.opts = opts[0]
+		r.opts = mergeHeaders(defaultHeader(), opts[0])
 	}
 
 	switch method {

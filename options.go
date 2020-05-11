@@ -4,13 +4,13 @@ import "time"
 
 // Options object
 type Options struct {
-	BaseURI    string
-	Timeout    float32
-	timeout    time.Duration
-	Query      interface{}
 	Headers    map[string]interface{}
-	Cookies    interface{}
+	BaseURI    string
+	Query      interface{}
 	FormParams map[string]interface{}
 	JSON       interface{}
+	Timeout    float32
+	timeout    time.Duration
+	Cookies    interface{}
 	Proxy      string
 }
