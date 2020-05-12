@@ -1,6 +1,7 @@
 package goz
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -28,13 +29,19 @@ func (r *Response) GetResponse() *http.Response {
 // GetBody parse response body
 func (r *Response) GetContents() (string, error) {
 	defer r.resp.Body.Close()
-
+	temp := fmt.Sprintf("%v", r.resp.Header["Content-Type"])
+	var bodystr string
 	body, err := ioutil.ReadAll(r.resp.Body)
 	if err != nil {
 		return "", err
 	}
+	if strings.Contains(strings.ToLower(temp), "charset=gb") {
+		bodystr = simpleChinese2Utf8(body)
+	} else {
+		bodystr = string(body)
+	}
 
-	return string(body), nil
+	return bodystr, nil
 }
 
 // Get Response ContentLength

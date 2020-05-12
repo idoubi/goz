@@ -34,7 +34,8 @@ func (r *Request) Get(uri string, opts ...Options) (*Response, error) {
 func (r *Request) Down(resource_url string, sava_path string, opts ...Options) bool {
 	uri, err := url.ParseRequestURI(resource_url)
 	if err != nil {
-		log.Panic("网址无法访问")
+		log.Panic("网址无法访问:" + err.Error())
+		return false
 	}
 
 	if resp, err := r.Request("GET", resource_url, opts...); err == nil {
@@ -137,7 +138,6 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	default:
 		return nil, errors.New("invalid request method")
 	}
-	//r.opts.Headers["Host"]=make()
 	r.opts.Headers["Host"] = fmt.Sprintf("%v", r.req.Host)
 	// parseOptions
 	r.parseOptions()
@@ -209,11 +209,6 @@ func (r *Request) parseQuery() {
 			}
 			vv := fmt.Sprintf("%v", v)
 			q.Set(k, vv)
-			//if vv, ok := v.(string); ok {
-			//	q.Set(k, vv)
-			//	continue
-			//}
-
 		}
 		r.req.URL.RawQuery = q.Encode()
 	}
@@ -268,10 +263,6 @@ func (r *Request) parseBody() {
 			}
 			vv := fmt.Sprintf("%v", v)
 			values.Set(k, vv)
-			//if vv, ok := v.(string); ok {
-			//	values.Set(k, vv)
-			//}
-
 		}
 		r.body = strings.NewReader(values.Encode())
 

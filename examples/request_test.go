@@ -11,13 +11,15 @@ import (
 func ExampleRequest_Get() {
 	cli := goz.NewClient()
 
-	resp, err := cli.Get("http://127.0.0.1:8091/get")
+	//resp, err := cli.Get("http://127.0.0.1:8091/get")
+	resp, err := cli.Get("http://hq.sinajs.cn/list=sz002307,sh600928,sh603101,sz002547")
+	//resp, err := cli.Get("http://www.zhenai.com/")
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	fmt.Printf("%T", resp)
 	// Output: *goz.Response
+
 }
 
 func ExampleRequest_Down() {
