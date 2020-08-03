@@ -5,8 +5,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -93,6 +96,14 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	// parse cookies
 	r.parseCookies()
 
+	if r.opts.Debug {
+		// print request object
+		dump, err := httputil.DumpRequest(r.req, true)
+		if err == nil {
+			log.Printf("\n%s", dump)
+		}
+	}
+
 	_resp, err := r.cli.Do(r.req)
 
 	resp := &Response{
@@ -102,7 +113,18 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	}
 
 	if err != nil {
+		if r.opts.Debug {
+			// print response err
+			fmt.Println(err)
+		}
+
 		return resp, err
+	}
+
+	if r.opts.Debug {
+		// print response data
+		body, _ := resp.GetBody()
+		fmt.Println(string(body))
 	}
 
 	return resp, nil

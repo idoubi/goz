@@ -4,6 +4,7 @@ import "time"
 
 // Options object
 type Options struct {
+	Debug      bool
 	BaseURI    string
 	Timeout    float32
 	timeout    time.Duration
