@@ -23,6 +23,22 @@ func ExampleResponse_GetBody() {
 	// Output: goz.ResponseBody
 }
 
+func ExampleResponse_GetParsedBody() {
+	cli := goz.NewClient()
+	resp, err := cli.Get("http://127.0.0.1:8091/get-response-json")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, err := resp.GetParsedBody()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	fmt.Printf("%T,%v,%v", body, body.Get("code").Int(), body.Get("message").String())
+	// Output: *gjson.Result,10001,参数错误
+}
+
 func ExampleResponseBody_Read() {
 	cli := goz.NewClient()
 	resp, err := cli.Get("http://127.0.0.1:8091/get")

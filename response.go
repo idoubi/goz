@@ -5,6 +5,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/tidwall/gjson"
 )
 
 // Response response object
@@ -51,6 +53,18 @@ func (r *Response) GetBody() (ResponseBody, error) {
 	}
 
 	return ResponseBody(body), nil
+}
+
+// GetParsedBody parse response body with gjson
+func (r *Response) GetParsedBody() (*gjson.Result, error) {
+	b, err := r.GetBody()
+	if err != nil {
+		return nil, err
+	}
+
+	pb := gjson.ParseBytes(b)
+
+	return &pb, nil
 }
 
 // GetStatusCode get response status code

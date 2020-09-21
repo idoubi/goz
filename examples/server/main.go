@@ -11,6 +11,7 @@ import (
 
 func main() {
 	http.HandleFunc("/get", get)
+	http.HandleFunc("/get-response-json", getResponseJSON)
 	http.HandleFunc("/get-timeout", getTimeout)
 	http.HandleFunc("/get-with-query", getWithQuery)
 	http.HandleFunc("/post", post)
@@ -31,6 +32,16 @@ func main() {
 
 func get(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "http get")
+}
+
+func getResponseJSON(w http.ResponseWriter, r *http.Request) {
+	m := map[string]interface{}{
+		"code":    10001,
+		"message": "参数错误",
+	}
+	b, _ := json.Marshal(m)
+
+	fmt.Fprintf(w, string(b))
 }
 
 func getTimeout(w http.ResponseWriter, r *http.Request) {
