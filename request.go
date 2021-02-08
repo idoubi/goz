@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jarcoal/httpmock"
 	"io"
 	"log"
 	"net/http"
@@ -150,9 +151,36 @@ func (r *Request) parseClient() {
 		}
 	}
 
-	r.cli = &http.Client{
-		Timeout:   r.opts.timeout,
-		Transport: tr,
+	if len(httpmock.GetCallCountInfo()) == 0 {
+		r.cli = &http.Client{
+			Timeout:   r.opts.timeout,
+			Transport: tr,
+		}
+	}
+
+	if len(httpmock.GetCallCountInfo()) > 0 {
+		isInMock := false
+
+		for k := range httpmock.GetCallCountInfo() {
+			// 先用簡單的方式判斷，只要 API 的 Host + Path 相加的路徑符合，就對 API 進行隔離，雖然不是很精準的作法，但對我來說目前夠用
+			if strings.Contains(k, r.req.URL.Host + r.req.URL.Path) {
+				isInMock = true
+			}
+		}
+
+		if isInMock {
+			r.cli = &http.Client{
+				Timeout: r.opts.timeout,
+				// Transport: tr,
+			}
+		}
+
+		if !isInMock {
+			r.cli = &http.Client{
+				Timeout: r.opts.timeout,
+				Transport: tr,
+			}
+		}
 	}
 }
 
