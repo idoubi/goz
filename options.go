@@ -13,5 +13,6 @@ type Options struct {
 	Cookies    interface{}
 	FormParams map[string]interface{}
 	JSON       interface{}
+	XML        interface{}
 	Proxy      string
 }

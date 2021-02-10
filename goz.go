@@ -6,6 +6,8 @@ func NewClient(opts ...Options) *Request {
 
 	if len(opts) > 0 {
 		req.opts = opts[0]
+	} else {
+		req.opts = Options{}
 	}
 
 	return req

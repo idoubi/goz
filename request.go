@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/idoubi/goutils"
 )
 
 // Request object
@@ -59,6 +63,10 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 		r.opts = opts[0]
 	}
 
+	if r.opts.Headers == nil {
+		r.opts.Headers = make(map[string]interface{})
+	}
+
 	switch method {
 	case http.MethodGet, http.MethodDelete:
 		req, err := http.NewRequest(method, uri, nil)
@@ -100,7 +108,7 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 		// print request object
 		dump, err := httputil.DumpRequest(r.req, true)
 		if err == nil {
-			log.Printf("\n%s", dump)
+			log.Printf("\n%s\n\n", dump)
 		}
 	}
 
@@ -110,6 +118,14 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 		resp: _resp,
 		req:  r.req,
 		err:  err,
+	}
+
+	if err == nil {
+		body, err := ioutil.ReadAll(_resp.Body)
+		_resp.Body.Close()
+
+		resp.body = body
+		resp.err = err
 	}
 
 	if err != nil {
@@ -218,6 +234,10 @@ func (r *Request) parseHeaders() {
 func (r *Request) parseBody() {
 	// application/x-www-form-urlencoded
 	if r.opts.FormParams != nil {
+		if _, ok := r.opts.Headers["Content-Type"]; !ok {
+			r.opts.Headers["Content-Type"] = "application/x-www-form-urlencoded"
+		}
+
 		values := url.Values{}
 		for k, v := range r.opts.FormParams {
 			if vv, ok := v.(string); ok {
@@ -236,11 +256,38 @@ func (r *Request) parseBody() {
 
 	// application/json
 	if r.opts.JSON != nil {
+		if _, ok := r.opts.Headers["Content-Type"]; !ok {
+			r.opts.Headers["Content-Type"] = "application/json"
+		}
+
 		b, err := json.Marshal(r.opts.JSON)
 		if err == nil {
 			r.body = bytes.NewReader(b)
 
 			return
+		}
+	}
+
+	// application/xml
+	if r.opts.XML != nil {
+		if _, ok := r.opts.Headers["Content-Type"]; !ok {
+			r.opts.Headers["Content-Type"] = "application/xml"
+		}
+
+		switch r.opts.XML.(type) {
+		case map[string]string:
+			// 请求参数转换成xml结构
+			b, err := goutils.Map2XML(r.opts.XML.(map[string]string))
+			if err == nil {
+				r.body = bytes.NewBuffer(b)
+
+				return
+			}
+		default:
+			b, err := xml.Marshal(r.opts.JSON)
+			if err == nil {
+				r.body = bytes.NewBuffer(b)
+			}
 		}
 	}
 

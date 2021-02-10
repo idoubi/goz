@@ -1,7 +1,6 @@
 package goz
 
 import (
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -13,6 +12,7 @@ import (
 type Response struct {
 	resp *http.Response
 	req  *http.Request
+	body []byte
 	err  error
 }
 
@@ -45,24 +45,12 @@ func (r *Response) GetRequest() *http.Request {
 
 // GetBody parse response body
 func (r *Response) GetBody() (ResponseBody, error) {
-	defer r.resp.Body.Close()
-
-	body, err := ioutil.ReadAll(r.resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return ResponseBody(body), nil
+	return ResponseBody(r.body), r.err
 }
 
 // GetParsedBody parse response body with gjson
 func (r *Response) GetParsedBody() (*gjson.Result, error) {
-	b, err := r.GetBody()
-	if err != nil {
-		return nil, err
-	}
-
-	pb := gjson.ParseBytes(b)
+	pb := gjson.ParseBytes(r.body)
 
 	return &pb, nil
 }
