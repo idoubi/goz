@@ -177,6 +177,12 @@ func (r *Request) parseQuery() {
 	case string:
 		str := r.opts.Query.(string)
 		r.req.URL.RawQuery = str
+	case map[string]string:
+		q := r.req.URL.Query()
+		for k, v := range r.opts.Query.(map[string]string) {
+			q.Set(k, v)
+		}
+		r.req.URL.RawQuery = q.Encode()
 	case map[string]interface{}:
 		q := r.req.URL.Query()
 		for k, v := range r.opts.Query.(map[string]interface{}) {
