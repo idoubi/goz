@@ -205,6 +205,24 @@ func ExampleRequest_Post_withJSON() {
 	// Output: json:{"key1":"value1","key2":["value21","value22"],"key3":333}
 }
 
+func ExampleRequest_Post_withXML() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-xml", goz.Options{
+		XML: map[string]interface{}{
+			"out_trade_no": "xxx",
+			"total_fee":    333,
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+	fmt.Println(string(body.Read(10)))
+	// Output: xml:<xml>
+}
+
 func ExampleRequest_Put() {
 	cli := goz.NewClient()
 

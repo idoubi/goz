@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/idoubi/goutils"
+	"github.com/idoubi/goutils/convert"
 )
 
 // Request object
@@ -281,6 +282,13 @@ func (r *Request) parseBody() {
 		}
 
 		switch r.opts.XML.(type) {
+		case map[string]interface{}:
+			b, err := convert.Map2Xml(r.opts.XML.(map[string]interface{}))
+			if err == nil {
+				r.body = bytes.NewBuffer(b)
+
+				return
+			}
 		case map[string]string:
 			// 请求参数转换成xml结构
 			b, err := goutils.Map2XML(r.opts.XML.(map[string]string))
@@ -290,7 +298,7 @@ func (r *Request) parseBody() {
 				return
 			}
 		default:
-			b, err := xml.Marshal(r.opts.JSON)
+			b, err := xml.Marshal(r.opts.XML)
 			if err == nil {
 				r.body = bytes.NewBuffer(b)
 			}
