@@ -4,11 +4,12 @@ package goz
 func NewClient(opts ...Options) *Request {
 	req := &Request{}
 
+	opts0 := Options{}
 	if len(opts) > 0 {
-		req.opts = opts[0]
-	} else {
-		req.opts = Options{}
+		opts0 = opts[0]
 	}
+
+	req.SetOptions(opts0)
 
 	return req
 }

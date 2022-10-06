@@ -1,6 +1,9 @@
 package goz
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Options object
 type Options struct {
@@ -15,4 +18,41 @@ type Options struct {
 	JSON       interface{}
 	XML        interface{}
 	Proxy      string
+}
+
+func mergeOptions(opts0 Options, opts ...Options) Options {
+	for _, opt := range opts {
+		if opt.Debug {
+			opts0.Debug = opt.Debug
+		}
+		if strings.HasPrefix(opt.BaseURI, "http") {
+			opts0.BaseURI = opt.BaseURI
+		}
+		if opt.Timeout > 0 {
+			opts0.Timeout = opt.Timeout
+		}
+		if opt.Query != nil {
+			opts0.Query = opt.Query
+		}
+		if opt.Headers != nil {
+			opts0.Headers = opt.Headers
+		}
+		if opt.Cookies != nil {
+			opts0.Cookies = opt.Cookies
+		}
+		if opt.FormParams != nil {
+			opts0.FormParams = opt.FormParams
+		}
+		if opt.JSON != nil {
+			opts0.JSON = opt.JSON
+		}
+		if opt.XML != nil {
+			opts0.XML = opt.XML
+		}
+		if opt.Proxy != "" {
+			opts0.Proxy = opt.Proxy
+		}
+	}
+
+	return opts0
 }

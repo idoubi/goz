@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/idoubi/goutils"
 	"github.com/idoubi/goutils/convert"
+	"github.com/spf13/cast"
 )
 
 // Request object
@@ -30,38 +30,45 @@ type Request struct {
 
 // Get send get request
 func (r *Request) Get(uri string, opts ...Options) (*Response, error) {
-	return r.Request("GET", r.opts.BaseURI+uri, opts...)
+	return r.Request("GET", uri, opts...)
 }
 
 // Post send post request
 func (r *Request) Post(uri string, opts ...Options) (*Response, error) {
-	return r.Request("POST", r.opts.BaseURI+uri, opts...)
+	return r.Request("POST", uri, opts...)
 }
 
 // Put send put request
 func (r *Request) Put(uri string, opts ...Options) (*Response, error) {
-	return r.Request("PUT", r.opts.BaseURI+uri, opts...)
+	return r.Request("PUT", uri, opts...)
 }
 
 // Patch send patch request
 func (r *Request) Patch(uri string, opts ...Options) (*Response, error) {
-	return r.Request("PATCH", r.opts.BaseURI+uri, opts...)
+	return r.Request("PATCH", uri, opts...)
 }
 
 // Delete send delete request
 func (r *Request) Delete(uri string, opts ...Options) (*Response, error) {
-	return r.Request("DELETE", r.opts.BaseURI+uri, opts...)
+	return r.Request("DELETE", uri, opts...)
 }
 
 // Options send options request
 func (r *Request) Options(uri string, opts ...Options) (*Response, error) {
-	return r.Request("OPTIONS", r.opts.BaseURI+uri, opts...)
+	return r.Request("OPTIONS", uri, opts...)
+}
+
+// SetOptions: set request options
+func (r *Request) SetOptions(opts Options) {
+	r.opts = opts
 }
 
 // Request send request
 func (r *Request) Request(method, uri string, opts ...Options) (*Response, error) {
-	if len(opts) > 0 {
-		r.opts = opts[0]
+	r.opts = mergeOptions(r.opts, opts...)
+
+	if !strings.HasPrefix(uri, "http") && strings.HasPrefix(r.opts.BaseURI, "http") {
+		uri = r.opts.BaseURI + uri
 	}
 
 	if r.opts.Headers == nil {
@@ -214,6 +221,14 @@ func (r *Request) parseCookies() {
 				Value: v,
 			})
 		}
+	case map[string]interface{}:
+		cookies := r.opts.Cookies.(map[string]interface{})
+		for k, v := range cookies {
+			r.req.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: cast.ToString(v),
+			})
+		}
 	case []*http.Cookie:
 		cookies := r.opts.Cookies.([]*http.Cookie)
 		for _, cookie := range cookies {
@@ -291,7 +306,7 @@ func (r *Request) parseBody() {
 			}
 		case map[string]string:
 			// 请求参数转换成xml结构
-			b, err := goutils.Map2XML(r.opts.XML.(map[string]string))
+			b, err := convert.Map2Xml(r.opts.XML.(map[string]interface{}))
 			if err == nil {
 				r.body = bytes.NewBuffer(b)
 
@@ -304,6 +319,4 @@ func (r *Request) parseBody() {
 			}
 		}
 	}
-
-	return
 }
