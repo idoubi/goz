@@ -30,32 +30,32 @@ type Request struct {
 
 // Get send get request
 func (r *Request) Get(uri string, opts ...Options) (*Response, error) {
-	return r.Request("GET", uri, opts...)
+	return r.Request("GET", r.opts.BaseURI+uri, opts...)
 }
 
 // Post send post request
 func (r *Request) Post(uri string, opts ...Options) (*Response, error) {
-	return r.Request("POST", uri, opts...)
+	return r.Request("POST", r.opts.BaseURI+uri, opts...)
 }
 
 // Put send put request
 func (r *Request) Put(uri string, opts ...Options) (*Response, error) {
-	return r.Request("PUT", uri, opts...)
+	return r.Request("PUT", r.opts.BaseURI+uri, opts...)
 }
 
 // Patch send patch request
 func (r *Request) Patch(uri string, opts ...Options) (*Response, error) {
-	return r.Request("PATCH", uri, opts...)
+	return r.Request("PATCH", r.opts.BaseURI+uri, opts...)
 }
 
 // Delete send delete request
 func (r *Request) Delete(uri string, opts ...Options) (*Response, error) {
-	return r.Request("DELETE", uri, opts...)
+	return r.Request("DELETE", r.opts.BaseURI+uri, opts...)
 }
 
 // Options send options request
 func (r *Request) Options(uri string, opts ...Options) (*Response, error) {
-	return r.Request("OPTIONS", uri, opts...)
+	return r.Request("OPTIONS", r.opts.BaseURI+uri, opts...)
 }
 
 // Request send request
