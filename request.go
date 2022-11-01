@@ -16,7 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/idoubi/goutils"
+	"github.com/idoubi/goutils/convert"
+	"github.com/spf13/cast"
 )
 
 // Request object
@@ -57,10 +58,17 @@ func (r *Request) Options(uri string, opts ...Options) (*Response, error) {
 	return r.Request("OPTIONS", uri, opts...)
 }
 
+// SetOptions: set request options
+func (r *Request) SetOptions(opts Options) {
+	r.opts = opts
+}
+
 // Request send request
 func (r *Request) Request(method, uri string, opts ...Options) (*Response, error) {
-	if len(opts) > 0 {
-		r.opts = opts[0]
+	r.opts = mergeOptions(r.opts, opts...)
+
+	if !strings.HasPrefix(uri, "http") && strings.HasPrefix(r.opts.BaseURI, "http") {
+		uri = r.opts.BaseURI + uri
 	}
 
 	if r.opts.Headers == nil {
@@ -223,6 +231,14 @@ func (r *Request) parseCookies() {
 				Value: v,
 			})
 		}
+	case map[string]interface{}:
+		cookies := r.opts.Cookies.(map[string]interface{})
+		for k, v := range cookies {
+			r.req.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: cast.ToString(v),
+			})
+		}
 	case []*http.Cookie:
 		cookies := r.opts.Cookies.([]*http.Cookie)
 		for _, cookie := range cookies {
@@ -291,16 +307,23 @@ func (r *Request) parseBody() {
 		}
 
 		switch r.opts.XML.(type) {
+		case map[string]interface{}:
+			b, err := convert.Map2Xml(r.opts.XML.(map[string]interface{}))
+			if err == nil {
+				r.body = bytes.NewBuffer(b)
+
+				return
+			}
 		case map[string]string:
 			// 请求参数转换成xml结构
-			b, err := goutils.Map2XML(r.opts.XML.(map[string]string))
+			b, err := convert.Map2Xml(r.opts.XML.(map[string]interface{}))
 			if err == nil {
 				r.body = bytes.NewBuffer(b)
 
 				return
 			}
 		default:
-			b, err := xml.Marshal(r.opts.JSON)
+			b, err := xml.Marshal(r.opts.XML)
 			if err == nil {
 				r.body = bytes.NewBuffer(b)
 			}

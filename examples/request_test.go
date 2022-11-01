@@ -5,19 +5,37 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/idoubi/goutils"
 	"github.com/idoubi/goz"
 )
 
-func ExampleRequest_Get() {
-	cli := goz.NewClient()
+func ExampleGet() {
+	resp, err := goz.Get("http://127.0.0.1:8091/get")
 
-	resp, err := cli.Get("http://127.0.0.1:8091/get")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Printf("%T", resp)
-	// Output: *goz.Response
+	body, _ := resp.GetBody()
+
+	fmt.Printf("%s", body)
+	// Output: http get
+}
+
+func ExampleRequest_Get() {
+	cli := goz.NewClient(goz.Options{
+		BaseURI: "http://127.0.0.1:8091",
+	})
+
+	resp, err := cli.Get("/get")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+
+	fmt.Printf("%s", body)
+	// Output: http get
 }
 
 func ExampleRequest_Get_withQuery_arr() {
@@ -60,11 +78,12 @@ func ExampleRequest_Get_withProxy() {
 		Proxy:   "http://127.0.0.1:1087",
 	})
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err.Error())
+	} else {
+		fmt.Println(resp.GetStatusCode())
 	}
 
-	fmt.Println(resp.GetStatusCode())
-	// Output: 200
+	// Output: Get "https://www.fbisb.com/ip.php": proxyconnect tcp: dial tcp 127.0.0.1:1087: connect: connection refused
 }
 
 func ExampleRequest_Post() {
@@ -117,7 +136,7 @@ func ExampleRequest_Post_withCookies_map() {
 	cli := goz.NewClient()
 
 	resp, err := cli.Post("http://127.0.0.1:8091/post-with-cookies", goz.Options{
-		Cookies: map[string]string{
+		Cookies: map[string]interface{}{
 			"cookie1": "value1",
 			"cookie2": "value2",
 		},
@@ -187,7 +206,7 @@ func ExampleRequest_Post_withJSON() {
 	cli := goz.NewClient()
 
 	resp, err := cli.Post("http://127.0.0.1:8091/post-with-json", goz.Options{
-		Headers: map[string]interface{}{
+		Headers: goutils.MixMap{
 			"Content-Type": "application/json",
 		},
 		JSON: struct {
@@ -203,6 +222,24 @@ func ExampleRequest_Post_withJSON() {
 	body, _ := resp.GetBody()
 	fmt.Println(body)
 	// Output: json:{"key1":"value1","key2":["value21","value22"],"key3":333}
+}
+
+func ExampleRequest_Post_withXML() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-xml", goz.Options{
+		XML: map[string]interface{}{
+			"out_trade_no": "xxx",
+			"total_fee":    333,
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+	fmt.Println(string(body.Read(10)))
+	// Output: xml:<xml>
 }
 
 func ExampleRequest_Put() {

@@ -19,6 +19,7 @@ func main() {
 	http.HandleFunc("/post-with-cookies", postWithCookies)
 	http.HandleFunc("/post-with-form-params", postWithFormParams)
 	http.HandleFunc("/post-with-json", postWithJSON)
+	http.HandleFunc("/post-with-xml", postWithXML)
 	http.HandleFunc("/put", put)
 	http.HandleFunc("/patch", patch)
 	http.HandleFunc("/delete", delete)
@@ -106,6 +107,17 @@ func postWithJSON(w http.ResponseWriter, r *http.Request) {
 	json, _ := ioutil.ReadAll(r.Body)
 
 	fmt.Fprintf(w, "json:%s", json)
+}
+
+func postWithXML(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		fmt.Fprintf(w, "need post")
+		return
+	}
+
+	xml, _ := ioutil.ReadAll(r.Body)
+
+	fmt.Fprintf(w, "xml:%s", xml)
 }
 
 func put(w http.ResponseWriter, r *http.Request) {
