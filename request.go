@@ -155,8 +155,15 @@ func (r *Request) parseOptions() {
 }
 
 func (r *Request) parseClient() {
+	tlsConfig := &tls.Config{}
+	if len(r.opts.Certificates) > 0 {
+		tlsConfig.Certificates = r.opts.Certificates
+	} else {
+		tlsConfig.InsecureSkipVerify = true
+	}
+
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: tlsConfig,
 	}
 
 	if r.opts.Proxy != "" {
@@ -170,6 +177,9 @@ func (r *Request) parseClient() {
 		Timeout:   r.opts.timeout,
 		Transport: tr,
 	}
+
+	// prevents re-use of TCP connections between requests to the same host
+	r.req.Close = true
 }
 
 func (r *Request) parseQuery() {
@@ -296,6 +306,4 @@ func (r *Request) parseBody() {
 			}
 		}
 	}
-
-	return
 }
