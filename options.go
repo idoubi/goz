@@ -54,6 +54,9 @@ func mergeOptions(opts0 Options, opts ...Options) Options {
 		if opt.Proxy != "" {
 			opts0.Proxy = opt.Proxy
 		}
+		if opt.Certificates != nil {
+			opts0.Certificates = opt.Certificates
+		}
 	}
 
 	return opts0
