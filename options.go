@@ -18,6 +18,7 @@ type Options struct {
 	FormParams   map[string]interface{}
 	JSON         interface{}
 	XML          interface{}
+	Multipart    []FormData
 	Proxy        string
 	Certificates []tls.Certificate
 }
@@ -50,6 +51,9 @@ func mergeOptions(opts0 Options, opts ...Options) Options {
 		}
 		if opt.XML != nil {
 			opts0.XML = opt.XML
+		}
+		if opt.Multipart != nil {
+			opts0.Multipart = opt.Multipart
 		}
 		if opt.Proxy != "" {
 			opts0.Proxy = opt.Proxy

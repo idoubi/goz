@@ -242,6 +242,36 @@ func ExampleRequest_Post_withXML() {
 	// Output: xml:<xml>
 }
 
+func ExampleRequest_Post_withMultipart() {
+	cli := goz.NewClient(goz.Options{
+		Debug: false,
+	})
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-multipart", goz.Options{
+		Multipart: []goz.FormData{
+			{
+				Name:     "foo",
+				Contents: []byte("bar"),
+			},
+			{
+				Name:     "json",
+				Contents: []byte(`{"title":"title","intro":"introduction"}`),
+			},
+			{
+				Name:     "media",
+				Filepath: "./goz.png",
+			},
+		},
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, _ := resp.GetBody()
+	fmt.Println(string(body.Read(10)))
+	// Output: body:
+}
+
 func ExampleRequest_Put() {
 	cli := goz.NewClient()
 

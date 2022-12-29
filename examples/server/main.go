@@ -20,6 +20,7 @@ func main() {
 	http.HandleFunc("/post-with-form-params", postWithFormParams)
 	http.HandleFunc("/post-with-json", postWithJSON)
 	http.HandleFunc("/post-with-xml", postWithXML)
+	http.HandleFunc("/post-with-multipart", postWithMultipart)
 	http.HandleFunc("/put", put)
 	http.HandleFunc("/patch", patch)
 	http.HandleFunc("/delete", delete)
@@ -118,6 +119,26 @@ func postWithXML(w http.ResponseWriter, r *http.Request) {
 	xml, _ := ioutil.ReadAll(r.Body)
 
 	fmt.Fprintf(w, "xml:%s", xml)
+}
+
+func postWithMultipart(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		fmt.Fprintf(w, "need post")
+		return
+	}
+
+	r.ParseMultipartForm(100)
+
+	for k, v := range r.Form {
+		fmt.Printf("form fields: %s, %v\n", k, v)
+	}
+	for k := range r.MultipartForm.File {
+		file, fileHeader, _ := r.FormFile(k)
+		defer file.Close()
+		fmt.Printf("form file: %s, %d, %v\n", fileHeader.Filename, fileHeader.Size, file)
+	}
+
+	fmt.Fprintf(w, "body:%s", "")
 }
 
 func put(w http.ResponseWriter, r *http.Request) {

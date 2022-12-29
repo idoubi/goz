@@ -10,9 +10,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"net/textproto"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -26,6 +30,15 @@ type Request struct {
 	cli  *http.Client
 	req  *http.Request
 	body io.Reader
+}
+
+// FormData: multipart form-data
+type FormData struct {
+	Name     string
+	Contents []byte
+	Filename string
+	Filepath string
+	Headers  map[string]interface{}
 }
 
 // Get send get request
@@ -328,5 +341,71 @@ func (r *Request) parseBody() {
 				r.body = bytes.NewBuffer(b)
 			}
 		}
+	}
+
+	// multipart/form-data
+	if r.opts.Multipart != nil {
+		if _, ok := r.opts.Headers["Content-Type"]; !ok {
+			r.opts.Headers["Content-Type"] = "multipart/form-data"
+		}
+
+		buf := new(bytes.Buffer)
+		bw := multipart.NewWriter(buf)
+
+		for _, v := range r.opts.Multipart {
+			if v.Headers == nil {
+				v.Headers = map[string]interface{}{}
+			}
+			if v.Filepath != "" {
+				if v.Filename == "" {
+					v.Filename = filepath.Base(v.Filepath)
+				}
+				if v.Contents == nil {
+					f, err := os.Open(v.Filepath)
+					if err == nil {
+						defer f.Close()
+
+						fi, err := f.Stat()
+						if err == nil {
+							size := fi.Size()
+
+							fd := make([]byte, size)
+							f.Read(fd)
+
+							v.Headers["Content-Type"] = http.DetectContentType(fd)
+							v.Contents = fd
+						}
+					}
+				}
+			}
+
+			arr := []string{
+				"form-data",
+				"name=" + v.Name,
+			}
+			if v.Filename != "" {
+				arr = append(arr, "filename="+v.Filename)
+			}
+
+			h := make(textproto.MIMEHeader)
+
+			// set content disposition
+			h.Set("Content-Disposition", strings.Join(arr, "; "))
+
+			// set headers
+			for key, value := range v.Headers {
+				if header, ok := value.(string); ok {
+					h.Set(key, header)
+				}
+			}
+
+			p, _ := bw.CreatePart(h)
+			io.Copy(p, bytes.NewReader(v.Contents))
+		}
+
+		bw.Close()
+
+		r.body = buf
+		r.opts.Headers["Content-Type"] = bw.FormDataContentType()
 	}
 }
