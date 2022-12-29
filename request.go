@@ -371,9 +371,11 @@ func (r *Request) parseBody() {
 
 							fd := make([]byte, size)
 							f.Read(fd)
-
-							v.Headers["Content-Type"] = http.DetectContentType(fd)
 							v.Contents = fd
+
+							if _, ok := v.Headers["Content-Type"]; !ok {
+								v.Headers["Content-Type"] = http.DetectContentType(fd)
+							}
 						}
 					}
 				}
@@ -381,10 +383,10 @@ func (r *Request) parseBody() {
 
 			arr := []string{
 				"form-data",
-				"name=" + v.Name,
+				fmt.Sprintf("name=%q", v.Name),
 			}
 			if v.Filename != "" {
-				arr = append(arr, "filename="+v.Filename)
+				arr = append(arr, fmt.Sprintf("filename=%q", v.Filename))
 			}
 
 			h := make(textproto.MIMEHeader)
