@@ -226,6 +226,9 @@ func (r *Request) parseQuery() {
 					q.Add(k, vvv)
 				}
 			}
+			if vv := cast.ToString(v); vv != "" {
+				q.Set(k, vv)
+			}
 		}
 		r.req.URL.RawQuery = q.Encode()
 	}
@@ -272,6 +275,9 @@ func (r *Request) parseHeaders() {
 					r.req.Header.Add(k, vvv)
 				}
 			}
+			if vv := cast.ToString(v); vv != "" {
+				r.req.Header.Set(k, vv)
+			}
 		}
 	}
 }
@@ -292,6 +298,9 @@ func (r *Request) parseBody() {
 				for _, vvv := range vv {
 					values.Add(k, vvv)
 				}
+			}
+			if vv := cast.ToString(v); vv != "" {
+				values.Set(k, vv)
 			}
 		}
 		r.body = strings.NewReader(values.Encode())
