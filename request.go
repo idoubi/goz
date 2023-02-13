@@ -141,14 +141,7 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 		err:  err,
 	}
 
-	if err == nil {
-		body, err := ioutil.ReadAll(_resp.Body)
-		_resp.Body.Close()
-
-		resp.body = body
-		resp.err = err
-	}
-
+	// request failed
 	if err != nil {
 		if r.opts.Debug {
 			// print response err
@@ -157,6 +150,21 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 
 		return resp, err
 	}
+
+	// stream response
+	if resp.GetHeaderLine("content-type") == "text/event-stream" {
+		resp.stream = make(chan []byte)
+
+		go resp.parseSteam()
+
+		return resp, nil
+	}
+
+	body, err := ioutil.ReadAll(_resp.Body)
+	_resp.Body.Close()
+
+	resp.body = body
+	resp.err = err
 
 	if r.opts.Debug {
 		// print response data

@@ -98,6 +98,29 @@ func ExampleRequest_Post() {
 	// Output: *goz.Response
 }
 
+func ExampleRequest_Post_withStreamResponse() {
+	cli := goz.NewClient()
+
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-stream-response")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var message []byte
+
+	for data := range resp.Stream() {
+		// fmt.Printf("stream data: %s\n", data)
+		message = append(message, data...)
+	}
+
+	if err := resp.Err(); err != nil {
+		log.Fatalf("stream closed with error: %v\n", err)
+	}
+
+	fmt.Printf("%s", message)
+	// Output: this message will response with stream
+}
+
 func ExampleRequest_Post_withHeaders() {
 	cli := goz.NewClient()
 

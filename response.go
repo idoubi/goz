@@ -1,19 +1,22 @@
 package goz
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
 
+	"github.com/launchdarkly/eventsource"
 	"github.com/tidwall/gjson"
 )
 
 // Response response object
 type Response struct {
-	resp *http.Response
-	req  *http.Request
-	body []byte
-	err  error
+	resp   *http.Response
+	req    *http.Request
+	body   []byte
+	stream chan []byte
+	err    error
 }
 
 // ResponseBody response body
@@ -121,4 +124,38 @@ func (r *Response) HasHeader(name string) bool {
 	}
 
 	return false
+}
+
+// Err: return response error
+func (r *Response) Err() error {
+	return r.err
+}
+
+// Stream: return response stream
+func (r *Response) Stream() chan []byte {
+	return r.stream
+}
+
+// parse response stream
+func (r *Response) parseSteam() {
+	defer r.resp.Body.Close()
+	defer close(r.stream)
+
+	decoder := eventsource.NewDecoder(r.resp.Body)
+
+	for {
+		event, err := decoder.Decode()
+		if err != nil {
+			r.err = fmt.Errorf("decode data failed: %v", err)
+			return
+		}
+
+		data := event.Data()
+		if data == "" || data == "[DONE]" {
+			// read data finished, success return
+			return
+		}
+
+		r.stream <- []byte(data)
+	}
 }

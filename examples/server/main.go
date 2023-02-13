@@ -21,6 +21,7 @@ func main() {
 	http.HandleFunc("/post-with-json", postWithJSON)
 	http.HandleFunc("/post-with-xml", postWithXML)
 	http.HandleFunc("/post-with-multipart", postWithMultipart)
+	http.HandleFunc("/post-with-stream-response", postWithStreamResponse)
 	http.HandleFunc("/put", put)
 	http.HandleFunc("/patch", patch)
 	http.HandleFunc("/delete", delete)
@@ -139,6 +140,32 @@ func postWithMultipart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "body:%s", "")
+}
+
+func postWithStreamResponse(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		fmt.Fprintf(w, "need post")
+		return
+	}
+
+	h := w.Header()
+	h.Set("Content-Type", "text/event-stream")
+	h.Set("Cache-Control", "no-cache")
+	h.Set("Connection", "keep-alive")
+	h.Set("X-Accel-Buffering", "no")
+
+	f, ok := w.(http.Flusher)
+	if !ok {
+		return
+	}
+
+	message := "this message will response with stream"
+	for i := 0; i < len(message); i++ {
+		fmt.Fprintf(w, "data: %c\n\n", message[i])
+	}
+	fmt.Fprint(w, "data: [DONE]\n\n")
+
+	f.Flush()
 }
 
 func put(w http.ResponseWriter, r *http.Request) {
