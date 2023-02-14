@@ -148,24 +148,48 @@ func postWithStreamResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h := w.Header()
-	h.Set("Content-Type", "text/event-stream")
-	h.Set("Cache-Control", "no-cache")
-	h.Set("Connection", "keep-alive")
-	h.Set("X-Accel-Buffering", "no")
-
-	f, ok := w.(http.Flusher)
+	flusher, ok := w.(http.Flusher)
 	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
 		return
 	}
 
-	message := "this message will response with stream"
-	for i := 0; i < len(message); i++ {
-		fmt.Fprintf(w, "data: %c\n\n", message[i])
-	}
-	fmt.Fprint(w, "data: [DONE]\n\n")
+	msgch := make(chan rune)
 
-	f.Flush()
+	go func() {
+		message := "this message will response with stream\n"
+		for _, c := range message {
+			msgch <- c
+			time.Sleep(500 * time.Millisecond)
+		}
+	}()
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	timeout := time.After(3 * time.Second)
+
+	for {
+		select {
+		case msg := <-msgch:
+			fmt.Fprintf(w, "data: %c\n\n", msg)
+			flusher.Flush()
+			log.Printf("flush data: %c\n", msg)
+
+			if msg == '\n' {
+				fmt.Fprintf(w, "data: %s\n\n", "[DONE]")
+				flusher.Flush()
+				log.Printf("end flush: %c\n", msg)
+				return
+			}
+		case <-timeout:
+			fmt.Fprintf(w, "data: %s\n\n", "[DONE]")
+			flusher.Flush()
+			log.Printf("end flush cause timeout: %c\n", '\n')
+			return
+		}
+	}
 }
 
 func put(w http.ResponseWriter, r *http.Request) {

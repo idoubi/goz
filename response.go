@@ -138,24 +138,27 @@ func (r *Response) Stream() chan []byte {
 
 // parse response stream
 func (r *Response) parseSteam() {
-	defer r.resp.Body.Close()
-	defer close(r.stream)
-
+	r.stream = make(chan []byte)
 	decoder := eventsource.NewDecoder(r.resp.Body)
 
-	for {
-		event, err := decoder.Decode()
-		if err != nil {
-			r.err = fmt.Errorf("decode data failed: %v", err)
-			return
-		}
+	go func() {
+		defer r.resp.Body.Close()
+		defer close(r.stream)
 
-		data := event.Data()
-		if data == "" || data == "[DONE]" {
-			// read data finished, success return
-			return
-		}
+		for {
+			event, err := decoder.Decode()
+			if err != nil {
+				r.err = fmt.Errorf("decode data failed: %v", err)
+				return
+			}
 
-		r.stream <- []byte(data)
-	}
+			data := event.Data()
+			if data == "" || data == "[DONE]" {
+				// read data finished, success return
+				return
+			}
+
+			r.stream <- []byte(data)
+		}
+	}()
 }

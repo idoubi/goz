@@ -153,9 +153,7 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 
 	// stream response
 	if resp.GetHeaderLine("content-type") == "text/event-stream" {
-		resp.stream = make(chan []byte)
-
-		go resp.parseSteam()
+		resp.parseSteam()
 
 		return resp, nil
 	}

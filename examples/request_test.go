@@ -101,7 +101,11 @@ func ExampleRequest_Post() {
 func ExampleRequest_Post_withStreamResponse() {
 	cli := goz.NewClient()
 
-	resp, err := cli.Post("http://127.0.0.1:8091/post-with-stream-response")
+	resp, err := cli.Post("http://127.0.0.1:8091/post-with-stream-response", goz.Options{
+		Headers: map[string]interface{}{
+			"Accept": "text/event-stream",
+		},
+	})
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -109,7 +113,7 @@ func ExampleRequest_Post_withStreamResponse() {
 	var message []byte
 
 	for data := range resp.Stream() {
-		// fmt.Printf("stream data: %s\n", data)
+		fmt.Printf("stream data: %s\n", data)
 		message = append(message, data...)
 	}
 
