@@ -150,9 +150,15 @@ func postWithStreamResponse(w http.ResponseWriter, r *http.Request) {
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+		fmt.Fprintf(w, "not support stream")
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+
+	timeout := time.After(20 * time.Second)
 
 	msgch := make(chan rune)
 
@@ -163,12 +169,6 @@ func postWithStreamResponse(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(500 * time.Millisecond)
 		}
 	}()
-
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-
-	timeout := time.After(3 * time.Second)
 
 	for {
 		select {

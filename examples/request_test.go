@@ -113,7 +113,7 @@ func ExampleRequest_Post_withStreamResponse() {
 	var message []byte
 
 	for data := range resp.Stream() {
-		fmt.Printf("stream data: %s\n", data)
+		log.Printf("stream data: %s\n", data)
 		message = append(message, data...)
 	}
 
@@ -121,7 +121,7 @@ func ExampleRequest_Post_withStreamResponse() {
 		log.Fatalf("stream closed with error: %v\n", err)
 	}
 
-	fmt.Printf("%s", message)
+	log.Printf("%s", message)
 	// Output: this message will response with stream
 }
 
