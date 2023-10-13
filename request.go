@@ -152,7 +152,7 @@ func (r *Request) Request(method, uri string, opts ...Options) (*Response, error
 	}
 
 	// stream response
-	if resp.GetHeaderLine("content-type") == "text/event-stream" {
+	if strings.HasPrefix(resp.GetHeaderLine("content-type"), "text/event-stream") {
 		resp.parseSteam()
 
 		return resp, nil

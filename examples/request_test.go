@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/idoubi/goutils"
 	"github.com/idoubi/goz"
@@ -105,9 +106,17 @@ func ExampleRequest_Post_withStreamResponse() {
 		Headers: map[string]interface{}{
 			"Accept": "text/event-stream",
 		},
+		JSON: map[string]interface{}{
+			"foo": "bar",
+		},
 	})
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	if !strings.HasPrefix(resp.GetHeaderLine("content-type"), "text/event-stream") {
+		body, _ := resp.GetBody()
+		log.Fatalf("get stream failed: %s\n", body)
 	}
 
 	var message []byte

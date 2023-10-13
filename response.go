@@ -153,7 +153,7 @@ func (r *Response) parseSteam() {
 			}
 
 			data := event.Data()
-			if data == "" || data == "[DONE]" {
+			if data == "[DONE]" {
 				// read data finished, success return
 				return
 			}
